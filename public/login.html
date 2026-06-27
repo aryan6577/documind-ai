@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DocuMind AI — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0d0d0d;
+      color: #ececec;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Background circles */
+    .bg-circle {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.12;
+      pointer-events: none;
+    }
+
+    .bg-circle-1 {
+      width: 500px;
+      height: 500px;
+      background: #2563eb;
+      top: -100px;
+      left: -100px;
+    }
+
+    .bg-circle-2 {
+      width: 400px;
+      height: 400px;
+      background: #7c3aed;
+      bottom: -100px;
+      right: -100px;
+    }
+
+    /* Card */
+    .login-card {
+      background: #111;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 50px 44px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+    }
+
+    /* Logo */
+    .logo {
+      width: 64px;
+      height: 64px;
+      background: #2563eb;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: white;
+      margin: 0 auto 24px;
+    }
+
+    h1 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 36px;
+    }
+
+    /* Google Button */
+    .google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 14px 20px;
+      background: #fff;
+      color: #333;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .google-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      background: #f8f8f8;
+    }
+
+    .google-btn img {
+      width: 22px;
+      height: 22px;
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 28px 0;
+      color: #333;
+      font-size: 0.8rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.07);
+    }
+
+    /* Features */
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: left;
+      margin-bottom: 32px;
+    }
+
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #888;
+      font-size: 0.85rem;
+    }
+
+    .feature-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(37,99,235,0.1);
+      border: 1px solid rgba(37,99,235,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #2563eb;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    /* Footer */
+    .login-footer {
+      margin-top: 28px;
+      color: #333;
+      font-size: 0.75rem;
+      line-height: 1.6;
+    }
+
+    .login-footer a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      color: #666;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle:hover { color: #fff; }
+
+    /* Light mode */
+    [data-theme="light"] body { background: #f0f4ff; color: #1a1a2e; }
+    [data-theme="light"] .login-card {
+      background: #fff;
+      border-color: rgba(0,0,0,0.08);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.1);
+    }
+    [data-theme="light"] h1 { color: #1a1a2e; }
+    [data-theme="light"] .subtitle { color: #888; }
+    [data-theme="light"] .feature { color: #555; }
+    [data-theme="light"] .divider { color: #ccc; }
+    [data-theme="light"] .divider::before,
+    [data-theme="light"] .divider::after { background: rgba(0,0,0,0.1); }
+    [data-theme="light"] .login-footer { color: #aaa; }
+    [data-theme="light"] .bg-circle-1 { opacity: 0.06; }
+    [data-theme="light"] .bg-circle-2 { opacity: 0.06; }
+  </style>
+</head>
+<body>
+
+  <div class="bg-circle bg-circle-1"></div>
+  <div class="bg-circle bg-circle-2"></div>
+
+  <button class="theme-toggle" onclick="toggleTheme()">
+    <i class="fas fa-moon" id="themeIcon"></i>
+  </button>
+
+  <div class="login-card">
+
+    <div class="logo">D</div>
+    <h1>DocuMind AI</h1>
+    <p class="subtitle">Your intelligent PDF assistant.<br/>Sign in to start chatting with your documents.</p>
+
+    <!-- Features -->
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon"><i class="fas fa-file-pdf"></i></div>
+        <span>Upload up to 20 PDFs and chat across all of them</span>
+      </div>
+      <div class="feature">
+        <div class="feature-icon"><i class="fas fa-brain"></i></div>
+        <span>AI-powered answers with source citations</span>
+      </div>
+      <div class="feature">
+        <div class="feature-icon"><i class="fas fa-history"></i></div>
+        <span>Your chats are saved and private to you</span>
+      </div>
+    </div>
+
+    <!-- Google Login Button -->
+    <a href="/auth/google" class="google-btn">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"/>
+      Continue with Google
+    </a>
+
+    <div class="divider">or</div>
+
+    <p style="color:#555; font-size:0.85rem;">
+      More sign-in options coming soon
+    </p>
+
+    <div class="login-footer">
+      By signing in, you agree to our
+      <a href="#">Terms of Service</a> and
+      <a href="#">Privacy Policy</a>.<br/>
+      Your documents are processed securely and never stored permanently.
+    </div>
+
+  </div>
+
+  <script>
+    // Theme toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      document.getElementById('themeIcon').className =
+        next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+      localStorage.setItem('login_theme', next);
+    }
+
+    // Apply saved theme
+    const saved = localStorage.getItem('login_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('themeIcon').className =
+      saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+  </script>
+
+</body>
+</html>

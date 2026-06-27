@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DocuMind AI</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+</head>
+<body>
+<button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggle">
+  <i class="fas fa-bars"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="logo-section">
+      <div class="logo-icon">D</div>
+      <div class="logo-text">
+        <h2>DocuMind AI</h2>
+        <span>PDF Intelligence</span>
+      </div>
+    </div>
+
+    <div class="user-profile" id="userProfile">
+      <img id="userPhoto" src="" alt="U"/>
+      <div class="user-info">
+        <div id="userName" class="user-name">Loading...</div>
+        <div id="userEmail" class="user-email"></div>
+      </div>
+      <a href="/auth/logout" class="logout-btn" title="Logout">
+        <i class="fas fa-sign-out-alt"></i>
+      </a>
+    </div>
+
+    <button class="new-chat-btn" onclick="newChat()">
+      <i class="fas fa-plus"></i> New Chat
+    </button>
+
+    <div class="section-label">
+      <i class="fas fa-history"></i> Recent Chats
+    </div>
+    <div id="chatHistoryList" class="chat-history-list">
+      <div class="no-history">No conversations yet</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">
+      <i class="fas fa-search"></i> Search in Documents
+    </div>
+    <div class="search-wrap">
+      <input type="text" id="docSearchInput" class="sidebar-input" placeholder="Search inside files..." onkeydown="if(event.key==='Enter') searchDocs()"/>
+      <button class="search-btn" onclick="searchDocs()"><i class="fas fa-search"></i></button>
+    </div>
+    <div id="searchResults" class="search-results"></div>
+
+    <div class="sidebar-bottom">
+      <button class="clear-btn" onclick="clearChat()">
+        <i class="fas fa-broom"></i> Clear Chat
+      </button>
+      <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button class="theme-btn" onclick="openSettings()" title="Settings">
+        <i class="fas fa-cog"></i>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">DocuMind AI</div>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="chat-header">
+      <div class="header-left">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="headerTitle">Upload files to get started</span>
+        <button class="icon-btn" id="renameBtn" onclick="renameChat()" style="display:none">
+          <i class="fas fa-pen"></i>
+        </button>
+      </div>
+      <div class="header-right">
+        <span id="docSummary"></span>
+        <button class="icon-btn export" id="exportBtn" onclick="exportChatPDF()" style="display:none">
+          <i class="fas fa-download"></i> Export
+        </button>
+      </div>
+    </div>
+
+    <div class="upload-bar">
+      <div class="upload-bar-left">
+        <span id="pdfCount" class="badge">0 Files</span>
+        <span id="uploadedNames" class="uploaded-names"></span>
+      </div>
+      <div class="upload-bar-right">
+        <button class="upload-btn" onclick="document.getElementById('pdfInput').click()">
+          <i class="fas fa-cloud-upload-alt"></i> Upload Files
+        </button>
+        <button class="remove-btn" id="removeAllBtn" onclick="clearAllDocs()" style="display:none">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+      <input type="file" id="pdfInput" accept=".pdf,.docx,.xlsx,.xls,.csv,.pptx,.txt,.md,.png,.jpg,.jpeg,.webp" hidden multiple onchange="uploadPDFs()"/>
+    </div>
+    <div id="uploadStatus" class="upload-status-bar"></div>
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="chat-messages" id="chatMessages">
+      <div class="welcome" id="welcomeScreen">
+        <div class="welcome-logo">D</div>
+        <h2>DocuMind AI</h2>
+        <p>Your intelligent document assistant. Upload files and start chatting — <strong>30 free messages</strong> included, no API key needed to get started.</p>
+        <div class="welcome-steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-text"><strong>Upload Files</strong><span>PDF, Word, Excel, PowerPoint & more</span></div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-text"><strong>Ask Anything</strong><span>AI searches across all your files instantly</span></div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-text"><strong>30 Free Messages</strong><span>No setup needed — just sign in and go!</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INPUT -->
+    <div class="chat-input-area">
+      <div class="input-container">
+        <textarea id="messageInput" placeholder="Ask anything about your documents..." rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="mic-btn" onclick="toggleVoiceInput()" id="micBtn" title="Voice input">
+          <i class="fas fa-microphone"></i>
+        </button>
+        <button class="send-btn" onclick="sendMessage()" id="sendBtn">
+          <i class="fas fa-arrow-up"></i>
+        </button>
+      </div>
+      <p class="input-hint">Enter to send • Shift+Enter for new line</p>
+    </div>
+
+  </div>
+
+  <!-- RENAME MODAL -->
+  <div class="modal-overlay" id="renameModal" style="display:none">
+    <div class="modal">
+      <h3>Rename Chat</h3>
+      <input type="text" id="renameInput" placeholder="Enter chat name..."/>
+      <div class="modal-buttons">
+        <button onclick="cancelRename()">Cancel</button>
+        <button class="primary" onclick="confirmRename()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div class="modal-overlay" id="settingsModal" style="display:none">
+    <div class="modal settings-modal">
+      <div class="modal-header">
+        <h3><i class="fas fa-cog"></i> Settings</h3>
+        <button class="modal-close" onclick="closeSettings()"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="settings-section">
+        <label><i class="fas fa-key"></i> Groq API Key</label>
+        <div class="settings-input-wrap">
+          <input type="password" id="groqKeySettings" placeholder="gsk_..."/>
+          <button class="toggle-visibility" onclick="toggleKeyVisibility()" id="toggleKeyBtn">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <small><a href="https://console.groq.com" target="_blank">Get a free key →</a></small>
+      </div>
+
+      <div class="settings-section">
+        <label><i class="fas fa-palette"></i> Appearance</label>
+        <div class="theme-options">
+          <button class="theme-option" onclick="setTheme('dark')" id="darkOption">
+            <i class="fas fa-moon"></i> Dark
+          </button>
+          <button class="theme-option" onclick="setTheme('light')" id="lightOption">
+            <i class="fas fa-sun"></i> Light
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button onclick="closeSettings()">Cancel</button>
+        <button class="primary" onclick="saveSettings()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

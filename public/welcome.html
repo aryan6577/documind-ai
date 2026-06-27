@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DocuMind AI — Chat with your PDFs</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0d0d0d;
+      --bg2: #111;
+      --bg3: #1a1a1a;
+      --border: rgba(255,255,255,0.08);
+      --text: #ececec;
+      --text2: #999;
+      --text3: #555;
+      --accent: #2563eb;
+      --accent2: #1d4ed8;
+    }
+
+    [data-theme="light"] {
+      --bg: #f8f9fc;
+      --bg2: #fff;
+      --bg3: #f0f2f8;
+      --border: rgba(0,0,0,0.08);
+      --text: #111;
+      --text2: #555;
+      --text3: #999;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* NAVBAR */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 8%;
+      background: rgba(13,13,13,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    [data-theme="light"] .navbar { background: rgba(248,249,252,0.85); }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-logo-icon {
+      width: 34px;
+      height: 34px;
+      background: var(--accent);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .nav-logo span {
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .theme-toggle {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle:hover { color: var(--text); }
+
+    .nav-btn {
+      background: var(--accent);
+      color: white;
+      padding: 9px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .nav-btn:hover { background: var(--accent2); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 140px 8% 80px;
+      position: relative;
+    }
+
+    .hero-glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(37,99,235,0.15), transparent 70%);
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 7px 16px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      color: var(--text2);
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge .dot {
+      width: 6px; height: 6px;
+      background: #10b981;
+      border-radius: 50%;
+    }
+
+    .hero h1 {
+      font-size: 3.4rem;
+      font-weight: 800;
+      line-height: 1.15;
+      max-width: 780px;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.05rem;
+      color: var(--text2);
+      max-width: 560px;
+      line-height: 1.7;
+      margin-bottom: 36px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      margin-bottom: 60px;
+    }
+
+    .cta-primary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--accent);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .cta-primary:hover {
+      background: var(--accent2);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(37,99,235,0.3);
+    }
+
+    .cta-primary img {
+      width: 18px; height: 18px;
+      background: white;
+      border-radius: 3px;
+      padding: 2px;
+    }
+
+    .cta-secondary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg3);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 14px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .cta-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* PREVIEW MOCKUP */
+    .hero-preview {
+      width: 100%;
+      max-width: 900px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+      position: relative;
+      z-index: 1;
+    }
+
+    .preview-bar {
+      display: flex;
+      gap: 7px;
+      padding: 14px 18px;
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .preview-dot { width: 11px; height: 11px; border-radius: 50%; }
+    .preview-dot.red { background: #ff5f57; }
+    .preview-dot.yellow { background: #febc2e; }
+    .preview-dot.green { background: #28c840; }
+
+    .preview-body {
+      padding: 32px;
+      text-align: left;
+    }
+
+    .preview-msg {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      align-items: flex-start;
+    }
+
+    .preview-avatar {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .preview-msg.user { flex-direction: row-reverse; }
+    .preview-msg.user .preview-avatar { background: var(--accent); color: white; }
+    .preview-msg.ai .preview-avatar { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); }
+
+    .preview-bubble {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 15px;
+      font-size: 0.85rem;
+      color: var(--text2);
+      max-width: 70%;
+    }
+
+    .preview-msg.user .preview-bubble {
+      background: var(--accent);
+      color: white;
+      border: none;
+    }
+
+    /* FEATURES */
+    .features {
+      padding: 100px 8%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-header h2 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .section-header p {
+      color: var(--text2);
+      font-size: 1rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: all 0.25s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(37,99,235,0.3);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    }
+
+    .feature-icon {
+      width: 44px; height: 44px;
+      background: rgba(37,99,235,0.1);
+      border: 1px solid rgba(37,99,235,0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+    }
+
+    .feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      color: var(--text2);
+      font-size: 0.88rem;
+      line-height: 1.7;
+    }
+
+    /* HOW IT WORKS */
+    .how-it-works {
+      padding: 100px 8%;
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .steps-row {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 30px;
+    }
+
+    .step-card {
+      text-align: center;
+    }
+
+    .step-circle {
+      width: 56px; height: 56px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 0 auto 18px;
+    }
+
+    .step-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .step-card p {
+      color: var(--text2);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    /* FINAL CTA */
+    .final-cta {
+      padding: 100px 8%;
+      text-align: center;
+    }
+
+    .final-cta h2 {
+      font-size: 2.1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .final-cta p {
+      color: var(--text2);
+      margin-bottom: 32px;
+      font-size: 1rem;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 36px;
+      color: var(--text3);
+      font-size: 0.82rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.2rem; }
+      .hero p { font-size: 0.95rem; }
+      .nav-logo span { display: none; }
+      .preview-body { padding: 20px; }
+      .preview-bubble { max-width: 85%; }
+    }
+    /* ═══════════ ANIMATIONS ═══════════ */
+
+    /* Fade up on load for hero elements */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-badge { animation: fadeUp 0.7s ease both; }
+    .hero h1 { animation: fadeUp 0.7s ease 0.1s both; }
+    .hero p { animation: fadeUp 0.7s ease 0.2s both; }
+    .hero-ctas { animation: fadeUp 0.7s ease 0.3s both; }
+    .hero-preview { animation: fadeUp 0.9s ease 0.4s both, float 6s ease-in-out 1.3s infinite; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    /* Glow pulse behind hero */
+    .hero-glow {
+      animation: glowPulse 5s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
+      50% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+    }
+
+    /* Scroll reveal — elements start hidden, JS adds .reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.in-view {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Stagger children of grids */
+    .features-grid .feature-card,
+    .steps-row .step-card {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .features-grid.in-view .feature-card,
+    .steps-row.in-view .step-card {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .features-grid.in-view .feature-card:nth-child(1) { transition-delay: 0.05s; }
+    .features-grid.in-view .feature-card:nth-child(2) { transition-delay: 0.1s; }
+    .features-grid.in-view .feature-card:nth-child(3) { transition-delay: 0.15s; }
+    .features-grid.in-view .feature-card:nth-child(4) { transition-delay: 0.2s; }
+    .features-grid.in-view .feature-card:nth-child(5) { transition-delay: 0.25s; }
+    .features-grid.in-view .feature-card:nth-child(6) { transition-delay: 0.3s; }
+
+    .steps-row.in-view .step-card:nth-child(1) { transition-delay: 0.05s; }
+    .steps-row.in-view .step-card:nth-child(2) { transition-delay: 0.15s; }
+    .steps-row.in-view .step-card:nth-child(3) { transition-delay: 0.25s; }
+
+    /* Enhanced hover on feature cards */
+    .feature-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), #60a5fa);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover::before { transform: scaleX(1); }
+
+    .feature-icon {
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+    .feature-card:hover .feature-icon {
+      transform: scale(1.1) rotate(-5deg);
+      background: var(--accent);
+      color: white;
+    }
+
+    /* Step circle hover pulse */
+    .step-circle {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .step-card:hover .step-circle {
+      transform: scale(1.1);
+      box-shadow: 0 8px 20px rgba(37,99,235,0.4);
+    }
+
+    /* Button micro-interactions */
+    .cta-primary, .cta-secondary, .nav-btn {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-primary::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 0; height: 0;
+      background: rgba(255,255,255,0.25);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.5s ease, height 0.5s ease;
+    }
+
+    .cta-primary:hover::after {
+      width: 300px;
+      height: 300px;
+    }
+
+    /* Preview chat bubbles animate in on load */
+    .preview-msg {
+      opacity: 0;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .preview-msg.user { animation-delay: 1.6s; }
+    .preview-msg.ai { animation-delay: 2.1s; }
+
+    /* Navbar shadow on scroll */
+    .navbar.scrolled {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+
+    /* Final CTA gentle pulse */
+    .final-cta .cta-primary {
+      animation: ctaPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes ctaPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(37,99,235,0.3); }
+      50% { box-shadow: 0 0 0 12px rgba(37,99,235,0); }
+    }
+
+    /* Smooth scroll */
+    html { scroll-behavior: smooth; }
+
+    /* Respect reduced motion preference */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    /* ═══════════ SCROLL FAQ ═══════════ */
+    .scroll-faq {
+      display: flex;
+      gap: 60px;
+      padding: 100px 8%;
+      max-width: 1200px;
+      margin: 0 auto;
+      align-items: flex-start;
+    }
+
+    .faq-sticky {
+      position: sticky;
+      top: 120px;
+      flex: 0 0 320px;
+    }
+
+    .faq-sticky h2 {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--text3);
+      transition: color 0.4s ease;
+    }
+
+    .faq-sticky h2.active {
+      color: var(--text);
+    }
+
+    .faq-items {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      padding-top: 20px;
+    }
+
+    .faq-item {
+      opacity: 0.25;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 32px;
+    }
+
+    .faq-item.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .faq-q {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .faq-a {
+      font-size: 0.95rem;
+      color: var(--text2);
+      line-height: 1.8;
+      max-width: 520px;
+    }
+
+    @media (max-width: 768px) {
+      .scroll-faq {
+        flex-direction: column;
+        gap: 30px;
+        padding: 60px 8%;
+      }
+      .faq-sticky {
+        position: static;
+      }
+      .faq-sticky h2 {
+        font-size: 2rem;
+        color: var(--text);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-logo">
+      <div class="nav-logo-icon">D</div>
+      <span>DocuMind AI</span>
+    </div>
+    <div class="nav-actions">
+      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+        <i class="fas fa-moon"></i>
+      </button>
+      <a href="/auth/google" class="nav-btn">Sign In</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-glow"></div>
+
+    <div class="hero-badge">
+  <span class="dot"></span>
+  30 free messages included — no API key needed to get started
+</div>
+
+    <h1>Chat with all your <span class="gradient">PDF documents</span> at once</h1>
+
+    <p>Upload up to 200 PDFs and ask questions across all of them. DocuMind AI finds the right answer and tells you exactly which document it came from.</p>
+
+    <div class="hero-ctas">
+      <a href="/auth/google" class="cta-primary">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt=""/>
+        Get Started Free
+      </a>
+      <a href="#features" class="cta-secondary">
+        <i class="fas fa-arrow-down"></i> See Features
+      </a>
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="hero-preview">
+      <div class="preview-bar">
+        <div class="preview-dot red"></div>
+        <div class="preview-dot yellow"></div>
+        <div class="preview-dot green"></div>
+      </div>
+      <div class="preview-body">
+        <div class="preview-msg user">
+          <div class="preview-avatar">U</div>
+          <div class="preview-bubble">What does the safety report say about ventilation?</div>
+        </div>
+        <div class="preview-msg ai">
+          <div class="preview-avatar">D</div>
+          <div class="preview-bubble">According to the safety report, ventilation systems must be inspected weekly to prevent overheating risks. [Source: Safety_Guidelines.pdf]</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="section-header">
+      <h2>Everything you need to work with documents</h2>
+      <p>Built for researchers, engineers, students and teams who work with large document sets.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+  <div class="feature-icon"><i class="fas fa-layer-group"></i></div>
+  <h3>Any File Format</h3>
+  <p>Upload PDFs, Word docs, Excel sheets, PowerPoint slides, images and more — up to 200 files at once. No conversion needed, just upload as-is.</p>
+</div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-quote-right"></i></div>
+        <h3>Source Citations</h3>
+        <p>Every answer tells you exactly which document and section it came from — full transparency.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-comments"></i></div>
+        <h3>Conversation Memory</h3>
+        <p>Ask follow-up questions naturally. DocuMind AI remembers the context of your conversation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-microphone"></i></div>
+        <h3>Voice Input</h3>
+        <p>Speak your questions instead of typing — perfect for hands-free research and review.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-history"></i></div>
+        <h3>Saved History</h3>
+        <p>All your conversations are saved per account so you can pick up right where you left off.</p>
+      </div>
+      <div class="feature-card">
+  <div class="feature-icon"><i class="fas fa-gift"></i></div>
+  <h3>30 Free Messages</h3>
+  <p>Get started instantly — no API key, no credit card. 30 free AI messages per hour, just sign in with Google and go.</p>
+</div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+        <h3>Private & Secure</h3>
+        <p>Sign in with Google. Your documents and chats are private to your account only.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how-it-works">
+    <div class="section-header">
+      <h2>Get started in 3 steps</h2>
+      <p>No setup, no installation. Just sign in and start chatting.</p>
+    </div>
+
+    <div class="steps-row">
+      <div class="step-card">
+  <div class="step-circle">1</div>
+  <h3>Sign in with Google</h3>
+  <p>One click sign-in. No passwords, no credit card, no API key needed to start.</p>
+</div>
+<div class="step-card">
+  <div class="step-circle">2</div>
+  <h3>Upload your files</h3>
+  <p>PDF, Word, Excel, PowerPoint, images and more — up to 200 files at once, no conversion needed.</p>
+</div>
+<div class="step-card">
+  <div class="step-circle">3</div>
+  <h3>Chat for free</h3>
+  <p>30 free AI messages per hour included. Need more? Add your own free Groq key for unlimited access.</p>
+</div>
+    </div>
+  </section>
+<!-- SCROLL FAQ -->
+  <section class="scroll-faq">
+    <div class="faq-sticky">
+      <h2>You asked,<br/>We answer</h2>
+    </div>
+    <div class="faq-items">
+      <div class="faq-item">
+        <div class="faq-q">What is DocuMind AI?</div>
+        <div class="faq-a">DocuMind AI is an AI-powered platform that helps you chat with, search, and extract insights from your PDF documents instantly.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">How many PDFs can I upload?</div>
+        <div class="faq-a">You can upload up to 200 PDFs at once and ask questions that span across all of them simultaneously.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Does it remember our conversation?</div>
+        <div class="faq-a">Yes, DocuMind AI keeps context across your conversation, so you can ask natural follow-up questions.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Is my data secure?</div>
+        <div class="faq-a">You sign in with Google, and your documents and chats are private to your account only.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I use voice input?</div>
+        <div class="faq-a">Yes, just tap the microphone icon and speak your question instead of typing it.</div>
+      </div>
+    </div>
+  </section>
+  <!-- FINAL CTA -->
+  <section class="final-cta">
+    <h2>Ready to chat with your documents?</h2>
+    <p>Get 30 free AI messages per hour — no API key, no credit card. Just sign in and upload your first file.</p>
+    <a href="/auth/google" class="cta-primary" style="display:inline-flex">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt=""/>
+      Continue with Google
+    </a>
+  </section>
+
+  <footer>
+    DocuMind AI • Built for document intelligence
+  </footer>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      document.getElementById('themeBtn').innerHTML =
+        next === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+      localStorage.setItem('welcome_theme', next);
+    }
+
+    const saved = localStorage.getItem('welcome_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('themeBtn').innerHTML =
+      saved === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+  // ═══════════ SCROLL REVEAL ═══════════
+    const revealTargets = document.querySelectorAll(
+      '.section-header, .features-grid, .steps-row, .final-cta'
+    );
+
+    revealTargets.forEach(el => el.classList.add('reveal'));
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    revealTargets.forEach(el => observer.observe(el));
+
+    // Navbar shadow on scroll
+    window.addEventListener('scroll', () => {
+      const nav = document.querySelector('.navbar');
+      if (window.scrollY > 20) nav.classList.add('scrolled');
+      else nav.classList.remove('scrolled');
+    });
+    // ═══════════ SCROLL FAQ HIGHLIGHT ═══════════
+    const faqItems = document.querySelectorAll('.faq-item');
+    const faqHeadline = document.querySelector('.faq-sticky h2');
+
+    const faqObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+          if (faqHeadline) faqHeadline.classList.add('active');
+        } else {
+          entry.target.classList.remove('active');
+        }
+      });
+    }, { threshold: 0.5, rootMargin: '-10% 0px -10% 0px' });
+
+    faqItems.forEach(item => faqObserver.observe(item));
+  </script>
+
+</body>
+</html>
