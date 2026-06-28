@@ -17,6 +17,13 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { ipKeyGenerator } = require('express-rate-limit');
+const pgSession = require('connect-pg-simple')(session);
+const { Pool } = require('pg');
+
+const sessionPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
 const app = express();
 
@@ -33,13 +40,18 @@ app.use(express.json());
 getEmbedder();
 
 app.use(session({
+  store: new pgSession({
+    pool: sessionPool,
+    tableName: 'session',
+    createTableIfMissing: true
+  }),
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   }
 }));
 
