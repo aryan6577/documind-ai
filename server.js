@@ -140,7 +140,13 @@ app.get('/auth/google',
 
 app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/welcome.html' }),
-  function(req, res) { res.redirect('/'); }
+  function(req, res) {
+    console.log('✅ Google callback success');
+    console.log('User:', req.user);
+    console.log('Session:', req.session);
+    console.log('isAuthenticated:', req.isAuthenticated());
+    res.redirect('/');
+  }
 );
 
 app.get('/auth/logout', function(req, res) {
@@ -164,7 +170,14 @@ app.get('/welcome.html', function(req, res) {
   res.sendFile(path.join(__dirname, 'public', 'welcome.html'));
 });
 
-app.get('/', isLoggedIn, function(req, res) {
+app.get('/', function(req, res) {
+  console.log('/ route hit');
+  console.log('isAuthenticated:', req.isAuthenticated());
+  console.log('Session ID:', req.sessionID);
+  console.log('User:', req.user);
+  if (!req.isAuthenticated()) {
+    return res.redirect('/welcome.html');
+  }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
