@@ -28,6 +28,12 @@ const sessionPool = new Pool({
 const app = express();
 
 // Initialize database
+// Create uploads folder if it doesn't exist
+if (!fs.existsSync('./uploads')) {
+  fs.mkdirSync('./uploads');
+  console.log('✅ uploads folder created');
+}
+
 docDB.initDB().catch(function(err) {
   console.error('❌ Database initialization failed:', err);
   process.exit(1);
