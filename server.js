@@ -35,6 +35,7 @@ docDB.initDB().catch(function(err) {
 
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
+app.set('trust proxy', 1);
 app.use(express.json());
 
 getEmbedder();
@@ -49,10 +50,11 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 24 * 60 * 60 * 1000,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-  }
+  maxAge: 24 * 60 * 60 * 1000,
+  secure: true,
+  sameSite: 'none',
+  httpOnly: true
+}
 }));
 
 app.use(passport.initialize());
@@ -141,14 +143,16 @@ app.get('/auth/google',
 app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/welcome.html' }),
   function(req, res) {
-    console.log('✅ Google callback success');
-    console.log('User:', req.user);
-    console.log('Session:', req.session);
-    console.log('isAuthenticated:', req.isAuthenticated());
-    res.redirect('/');
+    req.session.save(function(err) {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.redirect('/welcome.html');
+      }
+      console.log('✅ Session saved, redirecting to /');
+      res.redirect('/');
+    });
   }
 );
-
 app.get('/auth/logout', function(req, res) {
   req.logout(function() { res.redirect('/welcome.html'); });
 });
