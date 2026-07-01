@@ -307,11 +307,21 @@ app.post('/upload', isLoggedIn, uploadLimiter, upload.array('pdf', 200), async f
               type: path.extname(file.originalname).toLowerCase().replace('.', '')
             });
 
-            const pieces = chunkText(text);
-            for (let j = 0; j < pieces.length; j++) {
-              const vector = await embedText(pieces[j]);
-              await docDB.addChunk(docId, userId, file.originalname, pieces[j], vector);
-            }
+            // Only generate embeddings in development — too slow on free hosting
+if (process.env.NODE_ENV !== 'production') {
+  const pieces = chunkText(text);
+  for (let j = 0; j < pieces.length; j++) {
+    const vector = await embedText(pieces[j]);
+    await docDB.addChunk(docId, userId, file.originalname, pieces[j], vector);
+  }
+} else {
+  // In production use keyword-based chunking (much faster)
+  const pieces = chunkText(text);
+  for (let j = 0; j < pieces.length; j++) {
+    // Store with empty embedding — search will use keyword fallback
+    await docDB.addChunk(docId, userId, file.originalname, pieces[j], []);
+  }
+}
 
             results.push(file.originalname);
           } else {
@@ -486,20 +496,43 @@ async function findRelevantChunks(query, userId, topN) {
   const allChunks = await docDB.getUserChunks(userId);
   if (allChunks.length === 0) return [];
 
-  const queryVector = await embedText(query);
+  // Check if embeddings exist
+  const hasEmbeddings = allChunks[0].embedding && allChunks[0].embedding.length > 0;
 
-  const scored = allChunks.map(function(chunk) {
-    return {
-      docName: chunk.docName,
-      text: chunk.text,
-      score: cosineSimilarity(queryVector, chunk.embedding)
-    };
-  });
+  if (hasEmbeddings) {
+    // Semantic search
+    const queryVector = await embedText(query);
+    const scored = allChunks.map(function(chunk) {
+      return {
+        docName: chunk.docName,
+        text: chunk.text,
+        score: cosineSimilarity(queryVector, chunk.embedding)
+      };
+    });
+    return scored
+      .sort(function(a, b) { return b.score - a.score; })
+      .slice(0, topN)
+      .filter(function(c) { return c.score > 0.2; });
+  } else {
+    // Keyword search fallback
+    const queryWords = query.toLowerCase().split(' ')
+      .filter(function(w) { return w.length > 2; });
 
-  return scored
-    .sort(function(a, b) { return b.score - a.score; })
-    .slice(0, topN)
-    .filter(function(c) { return c.score > 0.2; });
+    const scored = allChunks.map(function(chunk) {
+      const textLower = chunk.text.toLowerCase();
+      let score = 0;
+      queryWords.forEach(function(word) {
+        const matches = textLower.split(word).length - 1;
+        score += matches;
+      });
+      return { docName: chunk.docName, text: chunk.text, score: score };
+    });
+
+    return scored
+      .sort(function(a, b) { return b.score - a.score; })
+      .slice(0, topN)
+      .filter(function(c) { return c.score > 0; });
+  }
 }
 
 // ═══════════════════════════════════════
