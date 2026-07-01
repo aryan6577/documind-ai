@@ -141,7 +141,10 @@ app.use('/api', globalLimiter);
 // ═══════════════════════════════════════
 // AUTH ROUTES
 // ═══════════════════════════════════════
-
+// Keep-alive ping endpoint
+app.get('/ping', function(req, res) {
+  res.json({ status: 'alive', timestamp: new Date().toISOString() });
+});
 app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
@@ -559,4 +562,15 @@ app.listen(PORT, function() {
   console.log('✅ DocuMind AI running at http://localhost:' + PORT);
   console.log('🔑 Groq key loaded: ' + (process.env.GROQ_API_KEY ? 'YES ✅' : 'NO ❌'));
   console.log('🗄️ Database: PostgreSQL (Supabase)');
+
+  // Keep-alive ping — prevents Render free tier from sleeping
+  if (process.env.NODE_ENV === 'production' && process.env.RENDER_URL) {
+    const keepAliveInterval = 14 * 60 * 1000; // 14 minutes
+    setInterval(function() {
+      fetch(process.env.RENDER_URL + '/ping')
+        .then(function() { console.log('🏓 Keep-alive ping sent'); })
+        .catch(function(err) { console.log('⚠️ Keep-alive ping failed:', err.message); });
+    }, keepAliveInterval);
+    console.log('🏓 Keep-alive enabled — pinging every 14 minutes');
+  }
 });
