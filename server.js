@@ -141,9 +141,16 @@ app.use('/api', globalLimiter);
 // ═══════════════════════════════════════
 // AUTH ROUTES
 // ═══════════════════════════════════════
-// Keep-alive ping endpoint
-app.get('/ping', function(req, res) {
-  res.json({ status: 'alive', timestamp: new Date().toISOString() });
+// Keep-alive ping endpoint — now runs a real DB query so Supabase's
+// idle timer (7-day auto-pause on free tier) gets reset too, not just Render.
+app.get('/ping', async function(req, res) {
+  try {
+    await sessionPool.query('SELECT 1');
+    res.json({ status: 'alive', db: 'ok', timestamp: new Date().toISOString() });
+  } catch (err) {
+    console.error('⚠️ Ping DB check failed:', err.message);
+    res.status(500).json({ status: 'alive', db: 'error', error: err.message, timestamp: new Date().toISOString() });
+  }
 });
 app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
@@ -563,12 +570,13 @@ app.listen(PORT, function() {
   console.log('🔑 Groq key loaded: ' + (process.env.GROQ_API_KEY ? 'YES ✅' : 'NO ❌'));
   console.log('🗄️ Database: PostgreSQL (Supabase)');
 
-  // Keep-alive ping — prevents Render free tier from sleeping
+  // Keep-alive ping — prevents Render free tier from sleeping AND
+  // resets Supabase's 7-day idle timer, since /ping now runs a real query.
   if (process.env.NODE_ENV === 'production' && process.env.RENDER_URL) {
     const keepAliveInterval = 14 * 60 * 1000; // 14 minutes
     setInterval(function() {
       fetch(process.env.RENDER_URL + '/ping')
-        .then(function() { console.log('🏓 Keep-alive ping sent'); })
+        .then(function() { console.log('🏓 Keep-alive ping sent (DB touched)'); })
         .catch(function(err) { console.log('⚠️ Keep-alive ping failed:', err.message); });
     }, keepAliveInterval);
     console.log('🏓 Keep-alive enabled — pinging every 14 minutes');
